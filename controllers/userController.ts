@@ -4,6 +4,7 @@ import randomstring from "randomstring";
 import bcrypt from "bcrypt";
 
 import userModel, { userInstance } from "../database/models/userModel";
+import { generateToken } from "../helpers/generateToken";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -11,7 +12,7 @@ export const register = async (req: Request, res: Response) => {
     if (!errors.isEmpty()) {
       return res
         .status(404)
-        .json({ success: false, message: "Invalid payload" });
+        .json({ success: false, type: "payload", message: "Invalid payload" });
     }
 
     const { firstName, lastName, username, email, password } = req.body;
@@ -31,18 +32,21 @@ export const register = async (req: Request, res: Response) => {
           if (!deleteUser) {
             return res.status(500).json({
               success: false,
+              type: "server",
               message: "Something went wrong",
             });
           }
         } else {
           return res.status(409).json({
             success: false,
+            type: "username",
             message: "Username is already taken",
           });
         }
       } else {
         return res.status(409).json({
           success: false,
+          type: "username",
           message: "Username is already taken",
         });
       }
@@ -63,18 +67,21 @@ export const register = async (req: Request, res: Response) => {
           if (!deleteUser) {
             return res.status(500).json({
               success: false,
+              type: "server",
               message: "Something went wrong",
             });
           }
         } else {
           return res.status(409).json({
             success: false,
+            type: "email",
             message: "Email is already taken",
           });
         }
       } else {
         return res.status(409).json({
           success: false,
+          type: "email",
           message: "Email is already taken",
         });
       }
@@ -99,15 +106,26 @@ export const register = async (req: Request, res: Response) => {
     if (!user.dataValues.id) {
       return res.status(500).json({
         success: false,
+        type: "server",
         message: "Something went wrong",
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      verification_token: verificationToken,
-      message: "User registered successfully",
-    });
+    let token = generateToken(firstName, lastName, username, email);
+
+    return res
+      .status(200)
+      .cookie("userToken", token, {
+        httpOnly: true,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        sameSite: "none",
+        secure: true,
+      })
+      .json({
+        success: true,
+        verification_token: verificationToken,
+        message: "User registered successfully",
+      });
   } catch (error) {
     console.log(`Error inside register controller`, error);
   }
