@@ -1,12 +1,12 @@
 import { ValidationChain, body } from "express-validator";
 
 export const registerValidator: ValidationChain[] = [
-  body("first_name")
+  body("firstName")
     .notEmpty()
     .withMessage("Firstname can't be empty")
     .matches(/^[A-Za-z\s]+$/)
     .withMessage("Firstname must be alphabetic."),
-  body("last_name")
+  body("lastName")
     .notEmpty()
     .withMessage("Lastname can't be empty")
     .matches(/^[A-Za-z\s]+$/)
@@ -18,8 +18,7 @@ export const registerValidator: ValidationChain[] = [
     .isByteLength({ min: 6 })
     .withMessage("Please provide a valid email address")
     .isEmail()
-    .withMessage("Invalid email...!!")
-    .normalizeEmail(),
+    .withMessage("Invalid email...!!"),
   body("password")
     .notEmpty()
     .withMessage("Password can't be empty")

@@ -14,7 +14,7 @@ export const register = async (req: Request, res: Response) => {
         .json({ success: false, message: "Invalid payload" });
     }
 
-    const { first_name, last_name, username, email, password } = req.body;
+    const { firstName, lastName, username, email, password } = req.body;
 
     const isUsername: userInstance | null = await userModel.findOne({
       where: { username: username },
@@ -88,8 +88,8 @@ export const register = async (req: Request, res: Response) => {
     let hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await userModel.create({
-      first_name: first_name,
-      last_name: last_name,
+      first_name: firstName,
+      last_name: lastName,
       username: username,
       email: email,
       password: hashedPassword,
