@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Result, ValidationError, validationResult } from "express-validator";
 import randomstring from "randomstring";
 import bcrypt from "bcrypt";
+import { Op } from "sequelize";
 
 import userModel, { userInstance } from "../database/models/userModel";
 import { generateToken } from "../helpers/generateToken";
@@ -128,5 +129,68 @@ export const register = async (req: Request, res: Response) => {
       });
   } catch (error) {
     console.log(`Error inside register controller`, error);
+  }
+};
+
+export const login = async (req: Request, res: Response) => {
+  try {
+    const errors: Result<ValidationError> = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(404)
+        .json({ success: false, type: "payload", message: "Invalid payload" });
+    }
+
+    const { username, password } = req.body;
+
+    let isUsername = await userModel.findOne({
+      where: { [Op.or]: [{ username: username }, { email: username }] },
+    });
+    if (isUsername !== null && isUsername.dataValues.deleted_at !== null) {
+      const { dataValues } = isUsername;
+      if (!dataValues.is_active) {
+        return res.status(401).json({
+          success: false,
+          type: "active",
+          message: "Account isn't activated",
+        });
+      }
+      let isPassword = await bcrypt.compare(password, dataValues.password);
+      if (isPassword !== true) {
+        return res.status(401).json({
+          success: false,
+          type: "credentials",
+          message: "Invalid Credentials",
+        });
+      }
+    } else {
+      return res.status(401).json({
+        success: false,
+        type: "credentials",
+        message: "Invalid Credentials",
+      });
+    }
+
+    let token = generateToken(
+      isUsername.dataValues.first_name,
+      isUsername.dataValues.last_name,
+      isUsername.dataValues.username,
+      isUsername.dataValues.email
+    );
+
+    return res
+      .status(200)
+      .cookie("userToken", token, {
+        httpOnly: true,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        sameSite: "none",
+        secure: true,
+      })
+      .json({
+        success: true,
+        message: "Login successful",
+      });
+  } catch (error) {
+    console.log(`Error inside login controller`, error);
   }
 };
