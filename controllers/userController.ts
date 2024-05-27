@@ -146,21 +146,23 @@ export const login = async (req: Request, res: Response) => {
     let isUsername = await userModel.findOne({
       where: { [Op.or]: [{ username: username }, { email: username }] },
     });
-    if (isUsername !== null && isUsername.dataValues.deleted_at !== null) {
+    if (isUsername !== null && isUsername.dataValues.deleted_at === null) {
       const { dataValues } = isUsername;
-      if (!dataValues.is_active) {
-        return res.status(401).json({
-          success: false,
-          type: "active",
-          message: "Account isn't activated",
-        });
-      }
+
       let isPassword = await bcrypt.compare(password, dataValues.password);
       if (isPassword !== true) {
         return res.status(401).json({
           success: false,
           type: "credentials",
           message: "Invalid Credentials",
+        });
+      }
+
+      if (!dataValues.is_active) {
+        return res.status(401).json({
+          success: false,
+          type: "active",
+          message: "Account isn't activated",
         });
       }
     } else {
