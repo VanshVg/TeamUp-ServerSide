@@ -15,14 +15,11 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "*",
     credentials: true,
-    methods: "GET, POST, PUT, DELETE",
-    allowedHeaders: "Content-Type, Authorization",
+    origin: true,
   })
 );
 app.use(passport.initialize());
-
 app.use("/", routes);
 
 const PORT: string | 4000 = process.env.PORT || 4000;

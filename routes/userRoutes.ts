@@ -6,14 +6,16 @@ import passport from "passport";
 import { applyPassportStrategy } from "../middlewares/passport";
 
 applyPassportStrategy();
-
 const userRouter: Router = express.Router();
 
 userRouter.post("/register", registerValidator, userController.register);
 userRouter.post("/login", loginValidator, userController.login);
 userRouter.put(
   "/activate/:token",
-  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  passport.authenticate("jwt", {
+    session: false,
+    failureRedirect: "/",
+  }),
   userController.activate
 );
 

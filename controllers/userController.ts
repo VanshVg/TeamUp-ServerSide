@@ -119,7 +119,6 @@ export const register = async (req: Request, res: Response) => {
       username,
       email
     ) as string;
-
     return res
       .cookie("token", token, {
         httpOnly: true,
