@@ -1,7 +1,12 @@
 import express, { Router } from "express";
 
 import * as userController from "../controllers/userController";
-import { loginValidator, registerValidator } from "../validators/userValidator";
+import {
+  changePasswordValidator,
+  loginValidator,
+  registerValidator,
+  verifyAccountValidator,
+} from "../validators/userValidator";
 import passport from "passport";
 import { applyPassportStrategy } from "../middlewares/passport";
 
@@ -12,11 +17,19 @@ userRouter.post("/register", registerValidator, userController.register);
 userRouter.post("/login", loginValidator, userController.login);
 userRouter.put(
   "/activate/:token",
+  verifyAccountValidator,
   passport.authenticate("jwt", {
     session: false,
     failureRedirect: "/",
   }),
   userController.activate
+);
+userRouter.post("/verify", userController.verifyAccount);
+userRouter.post("/verifyToken/:token", userController.verifyToken);
+userRouter.put(
+  "/password",
+  changePasswordValidator,
+  userController.changePassword
 );
 
 export default userRouter;

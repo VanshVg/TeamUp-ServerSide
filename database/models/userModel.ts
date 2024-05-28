@@ -12,7 +12,6 @@ interface userInterface {
   password: string;
   verification_token: string;
   is_active: number;
-  reset_request: Date;
   reset_token: string;
   deleted_at: Date;
   created_at: Date;
@@ -22,12 +21,7 @@ interface userInterface {
 interface userCreationAttribute
   extends Optional<
     userInterface,
-    | "reset_token"
-    | "id"
-    | "created_at"
-    | "updated_at"
-    | "deleted_at"
-    | "reset_request"
+    "reset_token" | "id" | "created_at" | "updated_at" | "deleted_at"
   > {}
 
 export interface userInstance
@@ -76,10 +70,6 @@ const users = sequelize.define<userInstance>(
     is_active: {
       type: DataType.BOOLEAN,
       allowNull: false,
-    },
-    reset_request: {
-      type: DataType.DATE,
-      allowNull: true,
     },
     reset_token: {
       type: DataType.STRING,

@@ -246,3 +246,121 @@ export const activate = async (req: Request, res: Response) => {
     console.log(`Error inside login controller`, error);
   }
 };
+
+export const verifyAccount = async (req: Request, res: Response) => {
+  try {
+    const errors: Result<ValidationError> = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(404)
+        .json({ success: false, type: "payload", message: "Invalid payload" });
+    }
+
+    const { username } = req.body;
+
+    const isUser = await userModel.findOne({
+      where: { [Op.or]: [{ username: username }, { email: username }] },
+    });
+
+    if (isUser == null) {
+      return res.status(404).json({
+        success: false,
+        type: "not_found",
+        message: "User not found",
+      });
+    }
+    if (!isUser.dataValues.is_active) {
+      return res.status(404).json({
+        success: false,
+        type: "not_active",
+        message: "Account isn't activated",
+      });
+    }
+
+    let resetToken: string = randomstring.generate({
+      length: 12,
+      charset: "alphanumeric",
+    });
+
+    let updateUser = await userModel.update(
+      { reset_token: resetToken },
+      { where: { [Op.or]: [{ username: username }, { email: username }] } }
+    );
+    if (!updateUser) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      reset_token: resetToken,
+      message: "Account is verified",
+    });
+  } catch (error) {
+    console.log(`Error inside verifyAccount controller`, error);
+  }
+};
+
+export const verifyToken = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.params;
+    const { username } = req.body;
+    [{ verification_token: token }];
+    const isUser = await userModel.findOne({
+      where: {
+        [Op.and]: [
+          { [Op.or]: [{ username: username }, { email: username }] },
+          { reset_token: token },
+        ],
+      },
+    });
+    if (isUser == null) {
+      return res.status(403).json({
+        success: false,
+        type: "unauthorised",
+        message: "User isn't authorised to access this page",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "User is authorised",
+    });
+  } catch (error) {
+    console.log(`Error inside verifyToken controller`, error);
+  }
+};
+
+export const changePassword = async (req: Request, res: Response) => {
+  console.log(req.body);
+  try {
+    const errors: Result<ValidationError> = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(404)
+        .json({ success: false, type: "payload", message: "Invalid payload" });
+    }
+
+    const { password, username } = req.body;
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const updatePassword = await userModel.update(
+      { password: hashedPassword },
+      { where: { [Op.or]: [{ username: username }, { email: username }] } }
+    );
+    if (!updatePassword[0]) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.log(`Error inside changePassword controller`, error);
+  }
+};
