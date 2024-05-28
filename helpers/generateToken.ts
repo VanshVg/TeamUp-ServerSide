@@ -19,7 +19,7 @@ export const generateToken = (
           email: email,
         },
       },
-      process.env.SECRET_KEY
+      process.env.SECRET_KEY as string
     );
   } catch (error) {
     console.log(`Error while generating token`, error);

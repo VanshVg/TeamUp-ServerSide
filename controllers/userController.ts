@@ -6,6 +6,7 @@ import { Op } from "sequelize";
 
 import userModel, { userInstance } from "../database/models/userModel";
 import { generateToken } from "../helpers/generateToken";
+import { userInterface } from "../interfaces/interfaces";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -93,9 +94,9 @@ export const register = async (req: Request, res: Response) => {
       charset: "alphanumeric",
     });
 
-    let hashedPassword = await bcrypt.hash(password, 10);
+    let hashedPassword: string = await bcrypt.hash(password, 10);
 
-    const user = await userModel.create({
+    const user: userInstance = await userModel.create({
       first_name: firstName,
       last_name: lastName,
       username: username,
@@ -112,18 +113,23 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    let token = generateToken(firstName, lastName, username, email);
+    let token: string = generateToken(
+      firstName,
+      lastName,
+      username,
+      email
+    ) as string;
 
     return res
-      .status(200)
-      .cookie("userToken", token, {
+      .cookie("token", token, {
         httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        sameSite: "none",
         secure: true,
+        sameSite: "none",
       })
+      .status(200)
       .json({
         success: true,
+        token: token,
         verification_token: verificationToken,
         message: "User registered successfully",
       });
@@ -143,13 +149,16 @@ export const login = async (req: Request, res: Response) => {
 
     const { username, password } = req.body;
 
-    let isUsername = await userModel.findOne({
+    let isUsername: userInstance = (await userModel.findOne({
       where: { [Op.or]: [{ username: username }, { email: username }] },
-    });
+    })) as userInstance;
     if (isUsername !== null && isUsername.dataValues.deleted_at === null) {
       const { dataValues } = isUsername;
 
-      let isPassword = await bcrypt.compare(password, dataValues.password);
+      let isPassword: boolean = await bcrypt.compare(
+        password,
+        dataValues.password
+      );
       if (isPassword !== true) {
         return res.status(401).json({
           success: false,
@@ -173,25 +182,67 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    let token = generateToken(
+    let token: string = generateToken(
       isUsername.dataValues.first_name,
       isUsername.dataValues.last_name,
       isUsername.dataValues.username,
       isUsername.dataValues.email
-    );
+    ) as string;
 
-    return res
-      .status(200)
-      .cookie("userToken", token, {
-        httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        sameSite: "none",
-        secure: true,
-      })
-      .json({
-        success: true,
-        message: "Login successful",
+    return res.status(200).json({
+      success: true,
+      token: token,
+      message: "Login successful",
+    });
+  } catch (error) {
+    console.log(`Error inside login controller`, error);
+  }
+};
+
+export const activate = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.params;
+    const isUser = await userModel.findOne({
+      where: {
+        [Op.and]: [
+          { id: (req.user as userInterface).id },
+          { verification_token: token },
+        ],
+      },
+    });
+    if (isUser == null) {
+      return res.status(403).json({
+        success: false,
+        type: "unauthorised",
+        message: "User isn't authorised to access this page",
       });
+    }
+    let { dataValues } = isUser;
+
+    let createdAt: number = dataValues.created_at.getTime();
+    let currentTime: number = new Date().getTime();
+    if ((currentTime - createdAt) / 60000 > 60) {
+      return res.status(403).json({
+        success: false,
+        type: "unauthorised",
+        message: "Token is expired please Register again",
+      });
+    }
+    let updateUser = userModel.update(
+      { is_active: 1 },
+      { where: { id: (req.user as userInterface).id } }
+    );
+    if (!updateUser) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "User activated successfully",
+    });
   } catch (error) {
     console.log(`Error inside login controller`, error);
   }
