@@ -133,7 +133,11 @@ export const register = async (req: Request, res: Response) => {
         message: "User registered successfully",
       });
   } catch (error) {
-    console.log(`Error inside register controller`, error);
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
   }
 };
 
@@ -194,7 +198,11 @@ export const login = async (req: Request, res: Response) => {
       message: "Login successful",
     });
   } catch (error) {
-    console.log(`Error inside login controller`, error);
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
   }
 };
 
@@ -243,7 +251,11 @@ export const activate = async (req: Request, res: Response) => {
       message: "User activated successfully",
     });
   } catch (error) {
-    console.log(`Error inside login controller`, error);
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
   }
 };
 
@@ -299,7 +311,11 @@ export const verifyAccount = async (req: Request, res: Response) => {
       message: "Account is verified",
     });
   } catch (error) {
-    console.log(`Error inside verifyAccount controller`, error);
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
   }
 };
 
@@ -328,12 +344,15 @@ export const verifyToken = async (req: Request, res: Response) => {
       message: "User is authorised",
     });
   } catch (error) {
-    console.log(`Error inside verifyToken controller`, error);
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
   }
 };
 
 export const changePassword = async (req: Request, res: Response) => {
-  console.log(req.body);
   try {
     const errors: Result<ValidationError> = validationResult(req);
     if (!errors.isEmpty()) {
@@ -361,6 +380,10 @@ export const changePassword = async (req: Request, res: Response) => {
       message: "Password changed successfully",
     });
   } catch (error) {
-    console.log(`Error inside changePassword controller`, error);
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
   }
 };
