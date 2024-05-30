@@ -39,4 +39,13 @@ sequelize
     }
   });
 
+sequelize
+  .sync({})
+  .then(() => {
+    console.log(`tables are synchronized`);
+  })
+  .catch((error) => {
+    console.log(`Error while synchronizing tables`, error);
+  });
+
 export default sequelize;

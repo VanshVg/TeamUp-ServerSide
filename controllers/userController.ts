@@ -192,11 +192,18 @@ export const login = async (req: Request, res: Response) => {
       isUsername.dataValues.email
     ) as string;
 
-    return res.status(200).json({
-      success: true,
-      token: token,
-      message: "Login successful",
-    });
+    return res
+      .status(200)
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      })
+      .json({
+        success: true,
+        token: token,
+        message: "Login successful",
+      });
   } catch (error) {
     return res.status(500).json({
       success: false,

@@ -1,5 +1,5 @@
 import { DataType } from "sequelize-typescript";
-import { Model, Optional, Sequelize } from "sequelize";
+import { Model, Optional } from "sequelize";
 
 import sequelize from "../connection";
 
@@ -93,14 +93,5 @@ const users = sequelize.define<userInstance>(
     deletedAt: "deleted_at",
   }
 );
-
-sequelize
-  .sync({})
-  .then(() => {
-    console.log(`users table is synchronized`);
-  })
-  .catch((error) => {
-    console.log(`Error while synchronizing users table`, error);
-  });
 
 export default users;
