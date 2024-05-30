@@ -8,6 +8,7 @@ import teamMembersModel, {
   teamMembersInstance,
 } from "../database/models/teamMembersModel";
 import { userInterface } from "../interfaces/interfaces";
+import { Op } from "sequelize";
 
 export const createTeam = async (req: Request, res: Response) => {
   try {
@@ -33,6 +34,7 @@ export const createTeam = async (req: Request, res: Response) => {
       name: teamName,
       description: teamDescription,
       code: teamCode,
+      members: 1,
       banner_url: bannerUrl,
       icon_color: iconColor,
     });
@@ -61,6 +63,82 @@ export const createTeam = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Team is created successfully",
+    });
+  } catch (error) {
+    console.log(`Error inside createTeam controller`, error);
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const joinTeam = async (req: Request, res: Response) => {
+  try {
+    const errors: Result<ValidationError> = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(404)
+        .json({ success: false, type: "payload", message: "Invalid payload" });
+    }
+    const { teamCode } = req.body;
+
+    let team: teamInstance | null = await teamModel.findOne({
+      where: { code: teamCode },
+    });
+    if (team === null) {
+      return res.status(404).json({
+        success: false,
+        type: "not_found",
+        message: "Team not found",
+      });
+    }
+
+    let user: teamMembersInstance | null = await teamMembersModel.findOne({
+      where: {
+        [Op.and]: [
+          { team_id: team.dataValues.id },
+          { user_id: (req.user as userInterface).id },
+        ],
+      },
+    });
+    if (user !== null) {
+      return res.status(409).json({
+        success: false,
+        type: "exists",
+        message: "You are already part of this team",
+      });
+    }
+
+    let updateTeam = await teamModel.update(
+      { members: team.dataValues.members + 1 },
+      { where: { id: team.dataValues.id } }
+    );
+    if (!updateTeam) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    const teamMember = await teamMembersModel.create({
+      team_id: team.dataValues.id,
+      user_id: (req.user as userInterface).id,
+      role: "member",
+    });
+    if (!teamMember) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User has joined successfully",
     });
   } catch (error) {
     console.log(`Error inside createTeam controller`, error);

@@ -8,6 +8,7 @@ interface teamInterface {
   name: string;
   description: string;
   code: string;
+  members: number;
   banner_url: string;
   icon_color: string;
   created_at: Date;
@@ -45,6 +46,10 @@ const teams = sequelize.define<teamInstance>(
     },
     code: {
       type: DataType.STRING,
+      allowNull: false,
+    },
+    members: {
+      type: DataType.INTEGER,
       allowNull: false,
     },
     banner_url: {

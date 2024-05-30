@@ -1,7 +1,10 @@
 import express, { Router } from "express";
 
 import * as teamController from "../controllers/teamController";
-import { createTeamValidator } from "../validators/teamValidator";
+import {
+  createTeamValidator,
+  joinTeamValidator,
+} from "../validators/teamValidator";
 import passport from "passport";
 
 const teamRouter: Router = express.Router();
@@ -14,6 +17,15 @@ teamRouter.post(
     failureRedirect: "/",
   }),
   teamController.createTeam
+);
+teamRouter.post(
+  "/join",
+  joinTeamValidator,
+  passport.authenticate("jwt", {
+    session: false,
+    failureRedirect: "/",
+  }),
+  teamController.joinTeam
 );
 
 export default teamRouter;
