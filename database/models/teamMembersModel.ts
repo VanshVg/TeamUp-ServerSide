@@ -4,7 +4,7 @@ import { DataType } from "sequelize-typescript";
 import users from "./userModel";
 import teams from "./teamModel";
 
-interface teamMembersInterface {
+export interface teamMembersInterface {
   id: number;
   team_id: number;
   user_id: number;
@@ -34,17 +34,9 @@ const teamMembers = sequelize.define<teamMembersInstance>(
     },
     team_id: {
       type: DataType.INTEGER,
-      references: {
-        model: "teams",
-        key: "id",
-      },
     },
     user_id: {
       type: DataType.INTEGER,
-      references: {
-        model: "users",
-        key: "id",
-      },
     },
     role: {
       type: DataType.STRING,
@@ -63,7 +55,11 @@ const teamMembers = sequelize.define<teamMembersInstance>(
   }
 );
 
-teamMembers.hasMany(users);
-teamMembers.hasMany(teams);
+teamMembers.belongsTo(users, {
+  foreignKey: "user_id",
+});
+teamMembers.belongsTo(teams, {
+  foreignKey: "team_id",
+});
 
 export default teamMembers;

@@ -27,5 +27,13 @@ teamRouter.post(
   }),
   teamController.joinTeam
 );
+teamRouter.get(
+  "/userTeams",
+  passport.authenticate("jwt", {
+    session: false,
+    failureRedirect: "/",
+  }),
+  teamController.userTeams
+);
 
 export default teamRouter;

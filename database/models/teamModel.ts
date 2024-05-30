@@ -3,7 +3,7 @@ import { Model, Optional } from "sequelize";
 import sequelize from "../connection";
 import { DataType } from "sequelize-typescript";
 
-interface teamInterface {
+export interface teamInterface {
   id: number;
   name: string;
   description: string;

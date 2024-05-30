@@ -40,7 +40,7 @@ sequelize
   });
 
 sequelize
-  .sync({ force: true })
+  .sync({})
   .then(() => {
     console.log(`tables are synchronized`);
   })

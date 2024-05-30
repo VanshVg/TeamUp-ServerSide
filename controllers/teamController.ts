@@ -6,9 +6,11 @@ import teamModel, { teamInstance } from "../database/models/teamModel";
 import { generateColor } from "../helpers/generateColor";
 import teamMembersModel, {
   teamMembersInstance,
+  teamMembersInterface,
 } from "../database/models/teamMembersModel";
 import { userInterface } from "../interfaces/interfaces";
 import { Op } from "sequelize";
+import userModel from "../database/models/userModel";
 
 export const createTeam = async (req: Request, res: Response) => {
   try {
@@ -139,6 +141,37 @@ export const joinTeam = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "User has joined successfully",
+    });
+  } catch (error) {
+    console.log(`Error inside createTeam controller`, error);
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const userTeams = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.user as userInterface;
+    let teams: teamMembersInstance[] = await teamMembersModel.findAll({
+      include: [
+        {
+          model: userModel,
+          where: { id: id },
+        },
+      ],
+    });
+
+    let data: teamMembersInterface[] = [];
+    teams.forEach((element) => {
+      data.push(element.dataValues);
+    });
+
+    return res.status(200).json({
+      success: true,
+      userTeams: data,
     });
   } catch (error) {
     console.log(`Error inside createTeam controller`, error);
