@@ -10,7 +10,6 @@ import teamMembersModel, {
 } from "../database/models/teamMembersModel";
 import { userInterface } from "../interfaces/interfaces";
 import { Op } from "sequelize";
-import userModel from "../database/models/userModel";
 
 export const createTeam = async (req: Request, res: Response) => {
   try {
@@ -29,7 +28,7 @@ export const createTeam = async (req: Request, res: Response) => {
     });
     let bannerUrl: string =
       `/background/teamBackground` +
-      (Math.floor(Math.random() * (3 - 1 + 1)) + 1);
+      (Math.floor(Math.random() * (2 - 1 + 1)) + 1);
     let iconColor: string = generateColor() as string;
 
     const team: teamInstance = await teamModel.create({
@@ -156,10 +155,10 @@ export const userTeams = async (req: Request, res: Response) => {
   try {
     const { id } = req.user as userInterface;
     let teams: teamMembersInstance[] = await teamMembersModel.findAll({
+      where: { user_id: id },
       include: [
         {
-          model: userModel,
-          where: { id: id },
+          model: teamModel,
         },
       ],
     });
@@ -174,7 +173,6 @@ export const userTeams = async (req: Request, res: Response) => {
       userTeams: data,
     });
   } catch (error) {
-    console.log(`Error inside createTeam controller`, error);
     return res.status(500).json({
       success: false,
       type: "server",
