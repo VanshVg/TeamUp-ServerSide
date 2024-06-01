@@ -35,7 +35,6 @@ teamRouter.get(
   }),
   teamController.userTeams
 );
-
 teamRouter.get(
   "/archivedTeams",
   passport.authenticate("jwt", {
@@ -43,6 +42,14 @@ teamRouter.get(
     failureRedirect: "/",
   }),
   teamController.archivedTeams
+);
+teamRouter.get(
+  "/get/:id",
+  passport.authenticate("jwt", {
+    session: false,
+    failureRedirect: "/",
+  }),
+  teamController.getTeam
 );
 
 export default teamRouter;

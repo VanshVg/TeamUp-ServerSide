@@ -209,3 +209,29 @@ export const archivedTeams = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getTeam = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const team: teamInstance = (await teamModel.findOne({
+      where: { id: id },
+    })) as teamInstance;
+    if (team === null) {
+      return res.status(404).json({
+        success: false,
+        type: "not_found",
+        message: "Team not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      teamData: team.dataValues,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
