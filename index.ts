@@ -10,13 +10,12 @@ import passport from "passport";
 config();
 
 const app: Express = express();
-
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
+    origin: process.env.FRONTEND_URL,
     credentials: true,
-    origin: true,
   })
 );
 app.use(passport.initialize());

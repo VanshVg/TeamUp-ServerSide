@@ -3,7 +3,6 @@ import { Result, ValidationError, validationResult } from "express-validator";
 import randomstring from "randomstring";
 
 import teamModel, { teamInstance } from "../database/models/teamModel";
-import { generateColor } from "../helpers/generateColor";
 import teamMembersModel, {
   teamMembersInstance,
   teamMembersInterface,
@@ -28,8 +27,7 @@ export const createTeam = async (req: Request, res: Response) => {
     });
     let bannerUrl: string =
       `/background/teamBackground` +
-      (Math.floor(Math.random() * (2 - 1 + 1)) + 1);
-    let iconColor: string = generateColor() as string;
+      (Math.floor(Math.random() * (5 - 1 + 1)) + 1);
 
     const team: teamInstance = await teamModel.create({
       name: teamName,
@@ -37,7 +35,7 @@ export const createTeam = async (req: Request, res: Response) => {
       code: teamCode,
       members: 1,
       banner_url: bannerUrl,
-      icon_color: iconColor,
+      is_archived: false,
     });
 
     if (!team) {

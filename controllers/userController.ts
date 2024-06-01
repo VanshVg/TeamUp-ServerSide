@@ -119,19 +119,12 @@ export const register = async (req: Request, res: Response) => {
       username,
       email
     ) as string;
-    return res
-      .cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-      })
-      .status(200)
-      .json({
-        success: true,
-        token: token,
-        verification_token: verificationToken,
-        message: "User registered successfully",
-      });
+    return res.status(200).json({
+      success: true,
+      token: token,
+      verification_token: verificationToken,
+      message: "User registered successfully",
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,

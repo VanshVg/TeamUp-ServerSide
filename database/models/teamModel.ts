@@ -10,7 +10,7 @@ export interface teamInterface {
   code: string;
   members: number;
   banner_url: string;
-  icon_color: string;
+  is_archived: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -56,8 +56,8 @@ const teams = sequelize.define<teamInstance>(
       type: DataType.STRING,
       allowNull: false,
     },
-    icon_color: {
-      type: DataType.STRING,
+    is_archived: {
+      type: DataType.BOOLEAN,
       allowNull: false,
     },
     created_at: {
