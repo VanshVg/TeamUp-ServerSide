@@ -157,6 +157,7 @@ export const userTeams = async (req: Request, res: Response) => {
       include: [
         {
           model: teamModel,
+          where: { is_archived: 0 },
         },
       ],
     });
@@ -169,6 +170,36 @@ export const userTeams = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       userTeams: data,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const archivedTeams = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.user as userInterface;
+    let teams: teamMembersInstance[] = await teamMembersModel.findAll({
+      where: { user_id: id },
+      include: [
+        {
+          model: teamModel,
+          where: { is_archived: 1 },
+        },
+      ],
+    });
+
+    let data: teamMembersInterface[] = [];
+    teams.forEach((element) => {
+      data.push(element.dataValues);
+    });
+    return res.status(200).json({
+      success: true,
+      archivedTeams: data,
     });
   } catch (error) {
     return res.status(500).json({
