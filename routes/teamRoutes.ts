@@ -58,4 +58,10 @@ teamRouter.put(
   teamController.updateArchive
 );
 
+teamRouter.delete(
+  "/remove/:id",
+  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  teamController.removeTeam
+);
+
 export default teamRouter;

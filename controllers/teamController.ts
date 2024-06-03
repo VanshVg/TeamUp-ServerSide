@@ -270,3 +270,39 @@ export const updateArchive = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const removeTeam = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const deleteUserTeam = await teamMembersModel.destroy({
+      where: { team_id: id },
+    });
+    if (!deleteUserTeam) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    const deleteTeam = await teamModel.destroy({ where: { id: id } });
+    if (!deleteTeam) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Team deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
