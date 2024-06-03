@@ -31,5 +31,18 @@ userRouter.put(
   changePasswordValidator,
   userController.changePassword
 );
+userRouter.get(
+  "/profile",
+  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  userController.getProfile
+);
+userRouter.put(
+  "/updateProfile",
+  passport.authenticate("jwt", {
+    session: false,
+    failureRedirect: "/",
+  }),
+  userController.updateProfile
+);
 
 export default userRouter;

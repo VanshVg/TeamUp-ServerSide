@@ -363,8 +363,8 @@ export const changePassword = async (req: Request, res: Response) => {
 
     const { password, username } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const updatePassword = await userModel.update(
+    const hashedPassword: string = await bcrypt.hash(password, 10);
+    const updatePassword: number[] = await userModel.update(
       { password: hashedPassword },
       { where: { [Op.or]: [{ username: username }, { email: username }] } }
     );
@@ -378,6 +378,148 @@ export const changePassword = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Password changed successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const getProfile = async (req: Request, res: Response) => {
+  try {
+    const user = await userModel.findOne({
+      where: { id: (req.user as userInterface).id },
+    });
+    if (!user?.dataValues.id) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      userData: user.dataValues,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const { firstName, lastName, username, email } = req.body;
+    const { id } = req.user as userInterface;
+
+    const isUsername: userInstance | null = await userModel.findOne({
+      where: { username: username },
+    });
+    if (isUsername != null) {
+      const { dataValues } = isUsername;
+      if (dataValues.username !== username) {
+        if (!dataValues.is_active) {
+          let createdAt: number = dataValues.created_at.getTime();
+          let currentTime: number = new Date().getTime();
+          if ((currentTime - createdAt) / 60000 > 60) {
+            let deleteUser: number = await userModel.destroy({
+              where: { username: username },
+            });
+            if (!deleteUser) {
+              return res.status(500).json({
+                success: false,
+                type: "server",
+                message: "Something went wrong",
+              });
+            }
+          } else {
+            return res.status(409).json({
+              success: false,
+              type: "username",
+              message: "Username is already taken",
+            });
+          }
+        } else {
+          return res.status(409).json({
+            success: false,
+            type: "username",
+            message: "Username is already taken",
+          });
+        }
+      }
+    }
+
+    const isEmail: userInstance | null = await userModel.findOne({
+      where: { email: email },
+    });
+    if (isEmail != null) {
+      const { dataValues } = isEmail;
+      if (dataValues.email != email) {
+        if (!dataValues.is_active) {
+          let createdAt: number = dataValues.created_at.getTime();
+          let currentTime: number = new Date().getTime();
+          if ((currentTime - createdAt) / 60000 > 60) {
+            let deleteUser: number = await userModel.destroy({
+              where: { email: email },
+            });
+            if (!deleteUser) {
+              return res.status(500).json({
+                success: false,
+                type: "server",
+                message: "Something went wrong",
+              });
+            }
+          } else {
+            return res.status(409).json({
+              success: false,
+              type: "email",
+              message: "Email is already taken",
+            });
+          }
+        } else {
+          return res.status(409).json({
+            success: false,
+            type: "email",
+            message: "Email is already taken",
+          });
+        }
+      }
+    }
+
+    let token: string = generateToken(
+      firstName,
+      lastName,
+      username,
+      email
+    ) as string;
+
+    const updateProfile = await userModel.update(
+      {
+        first_name: firstName,
+        last_name: lastName,
+        username: username,
+        email: email,
+      },
+      { where: { id: id } }
+    );
+    if (!updateProfile) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      token: token,
+      message: "User updated successfully",
     });
   } catch (error) {
     return res.status(500).json({
