@@ -9,6 +9,7 @@ export interface teamMembersInterface {
   team_id: number;
   user_id: number;
   role: "admin" | "member";
+  is_archived: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -40,6 +41,10 @@ const teamMembers = sequelize.define<teamMembersInstance>(
     },
     role: {
       type: DataType.STRING,
+    },
+    is_archived: {
+      type: DataType.BOOLEAN,
+      allowNull: false,
     },
     created_at: {
       type: DataType.DATE,

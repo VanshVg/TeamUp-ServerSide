@@ -35,7 +35,6 @@ export const createTeam = async (req: Request, res: Response) => {
       code: teamCode,
       members: 1,
       banner_url: bannerUrl,
-      is_archived: false,
     });
 
     if (!team) {
@@ -49,6 +48,7 @@ export const createTeam = async (req: Request, res: Response) => {
       team_id: team.dataValues.id,
       user_id: (req.user as userInterface).id,
       role: "admin",
+      is_archived: false,
     });
 
     if (!teamMembers) {
@@ -126,6 +126,7 @@ export const joinTeam = async (req: Request, res: Response) => {
       team_id: team.dataValues.id,
       user_id: (req.user as userInterface).id,
       role: "member",
+      is_archived: false,
     });
     if (!teamMember) {
       return res.status(500).json({
@@ -153,11 +154,10 @@ export const userTeams = async (req: Request, res: Response) => {
   try {
     const { id } = req.user as userInterface;
     let teams: teamMembersInstance[] = await teamMembersModel.findAll({
-      where: { user_id: id },
+      where: { [Op.and]: [{ user_id: id }, { is_archived: 0 }] },
       include: [
         {
           model: teamModel,
-          where: { is_archived: 0 },
         },
       ],
     });
@@ -184,11 +184,10 @@ export const archivedTeams = async (req: Request, res: Response) => {
   try {
     const { id } = req.user as userInterface;
     let teams: teamMembersInstance[] = await teamMembersModel.findAll({
-      where: { user_id: id },
+      where: { [Op.and]: [{ user_id: id }, { is_archived: 1 }] },
       include: [
         {
           model: teamModel,
-          where: { is_archived: 1 },
         },
       ],
     });
@@ -226,6 +225,42 @@ export const getTeam = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       teamData: team.dataValues,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const updateArchive = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const getTeam = await teamMembersModel.findOne({ where: { team_id: id } });
+    let is_archived = getTeam?.dataValues.is_archived;
+    const updateTeam = await teamMembersModel.update(
+      { is_archived: !is_archived },
+      {
+        where: {
+          [Op.and]: [
+            { user_id: (req.user as userInterface).id },
+            { team_id: id },
+          ],
+        },
+      }
+    );
+    if (!updateTeam) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Team archived successfully",
     });
   } catch (error) {
     return res.status(500).json({

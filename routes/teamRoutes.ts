@@ -52,4 +52,10 @@ teamRouter.get(
   teamController.getTeam
 );
 
+teamRouter.put(
+  "/archive/:id",
+  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  teamController.updateArchive
+);
+
 export default teamRouter;
