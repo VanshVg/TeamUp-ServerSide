@@ -21,7 +21,7 @@ export const createTeam = async (req: Request, res: Response) => {
 
     const { teamName, teamDescription } = req.body;
 
-    let teamCode: string = randomstring.generate({
+    const teamCode: string = randomstring.generate({
       length: 6,
       charset: "alphanumeric",
     });
@@ -297,6 +297,39 @@ export const removeTeam = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Team deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const resetCode = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    let teamCode: string = randomstring.generate({
+      length: 6,
+      charset: "alphanumeric",
+    });
+    const updateCode: [affectedRows: number] = await teamModel.update(
+      { code: teamCode },
+      { where: { id: id } }
+    );
+    if (!updateCode) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Team code updated successfully",
     });
   } catch (error) {
     return res.status(500).json({

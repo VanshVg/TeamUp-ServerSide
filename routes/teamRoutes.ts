@@ -51,17 +51,20 @@ teamRouter.get(
   }),
   teamController.getTeam
 );
-
 teamRouter.put(
   "/archive/:id",
   passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
   teamController.updateArchive
 );
-
 teamRouter.delete(
   "/remove/:id",
   passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
   teamController.removeTeam
+);
+teamRouter.put(
+  "/resetCode/:id",
+  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  teamController.resetCode
 );
 
 export default teamRouter;
