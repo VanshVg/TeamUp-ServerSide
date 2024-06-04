@@ -7,6 +7,7 @@ import { Op } from "sequelize";
 import userModel, { userInstance } from "../database/models/userModel";
 import { generateToken } from "../helpers/generateToken";
 import { userInterface } from "../interfaces/interfaces";
+import teamMembers from "../database/models/teamMembersModel";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -209,7 +210,7 @@ export const login = async (req: Request, res: Response) => {
 export const activate = async (req: Request, res: Response) => {
   try {
     const { token } = req.params;
-    const isUser = await userModel.findOne({
+    const isUser: userInstance | null = await userModel.findOne({
       where: {
         [Op.and]: [
           { id: (req.user as userInterface).id },
@@ -235,7 +236,7 @@ export const activate = async (req: Request, res: Response) => {
         message: "Token is expired please Register again",
       });
     }
-    let updateUser = userModel.update(
+    let updateUser: [affectedRows: number] = await userModel.update(
       { is_active: 1 },
       { where: { id: (req.user as userInterface).id } }
     );
@@ -270,7 +271,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
 
     const { username } = req.body;
 
-    const isUser = await userModel.findOne({
+    const isUser: userInstance | null = await userModel.findOne({
       where: { [Op.or]: [{ username: username }, { email: username }] },
     });
 
@@ -294,7 +295,7 @@ export const verifyAccount = async (req: Request, res: Response) => {
       charset: "alphanumeric",
     });
 
-    let updateUser = await userModel.update(
+    let updateUser: [affectedRows: number] = await userModel.update(
       { reset_token: resetToken },
       { where: { [Op.or]: [{ username: username }, { email: username }] } }
     );
@@ -324,7 +325,7 @@ export const verifyToken = async (req: Request, res: Response) => {
     const { token } = req.params;
     const { username } = req.body;
     [{ verification_token: token }];
-    const isUser = await userModel.findOne({
+    const isUser: userInstance | null = await userModel.findOne({
       where: {
         [Op.and]: [
           { [Op.or]: [{ username: username }, { email: username }] },
@@ -364,7 +365,7 @@ export const changePassword = async (req: Request, res: Response) => {
     const { password, username } = req.body;
 
     const hashedPassword: string = await bcrypt.hash(password, 10);
-    const updatePassword: number[] = await userModel.update(
+    const updatePassword: [affectedRows: number] = await userModel.update(
       { password: hashedPassword },
       { where: { [Op.or]: [{ username: username }, { email: username }] } }
     );
@@ -390,7 +391,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
 export const getProfile = async (req: Request, res: Response) => {
   try {
-    const user = await userModel.findOne({
+    const user: userInstance | null = await userModel.findOne({
       where: { id: (req.user as userInterface).id },
     });
     if (!user?.dataValues.id) {
@@ -415,15 +416,32 @@ export const getProfile = async (req: Request, res: Response) => {
 
 export const updateProfile = async (req: Request, res: Response) => {
   try {
+    const errors: Result<ValidationError> = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(404)
+        .json({ success: false, type: "payload", message: "Invalid payload" });
+    }
+
     const { firstName, lastName, username, email } = req.body;
     const { id } = req.user as userInterface;
 
     const isUsername: userInstance | null = await userModel.findOne({
       where: { username: username },
     });
+    const currentUsername: userInstance | null = await userModel.findOne({
+      where: { username: (req.user as userInterface).username },
+    });
+    if (currentUsername === null) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
     if (isUsername != null) {
       const { dataValues } = isUsername;
-      if (dataValues.username !== username) {
+      if (currentUsername.dataValues.username !== username) {
         if (!dataValues.is_active) {
           let createdAt: number = dataValues.created_at.getTime();
           let currentTime: number = new Date().getTime();
@@ -458,9 +476,19 @@ export const updateProfile = async (req: Request, res: Response) => {
     const isEmail: userInstance | null = await userModel.findOne({
       where: { email: email },
     });
+    const currentEmail: userInstance | null = await userModel.findOne({
+      where: { email: (req.user as userInterface).email },
+    });
+    if (currentEmail === null) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong",
+      });
+    }
     if (isEmail != null) {
       const { dataValues } = isEmail;
-      if (dataValues.email != email) {
+      if (currentEmail.dataValues.email != email) {
         if (!dataValues.is_active) {
           let createdAt: number = dataValues.created_at.getTime();
           let currentTime: number = new Date().getTime();
@@ -499,7 +527,7 @@ export const updateProfile = async (req: Request, res: Response) => {
       email
     ) as string;
 
-    const updateProfile = await userModel.update(
+    const updateProfile: [affectedRows: number] = await userModel.update(
       {
         first_name: firstName,
         last_name: lastName,
@@ -520,6 +548,126 @@ export const updateProfile = async (req: Request, res: Response) => {
       success: true,
       token: token,
       message: "User updated successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const errors: Result<ValidationError> = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(404)
+        .json({ success: false, type: "payload", message: "Invalid payload" });
+    }
+
+    const { currentPassword, password } = req.body;
+    const { username } = req.user as userInterface;
+
+    const user: userInstance | null = await userModel.findOne({
+      where: { username: username },
+    });
+    if (user === null) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    const passwordResult: boolean = await bcrypt.compare(
+      currentPassword,
+      user.dataValues.password
+    );
+    if (!passwordResult) {
+      return res.status(401).json({
+        success: false,
+        type: "password",
+        message: "Current password is wrong",
+      });
+    }
+
+    const hashedPassword: string = await bcrypt.hash(password, 10);
+    const updatePassword: [affectedRows: number] = await userModel.update(
+      { password: hashedPassword },
+      { where: { username: (req.user as userInterface).username } }
+    );
+    if (!updatePassword) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Password is updated successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const deleteAccount = async (req: Request, res: Response) => {
+  try {
+    const errors: Result<ValidationError> = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(404)
+        .json({ success: false, type: "payload", message: "Invalid payload" });
+    }
+
+    const { currentPassword } = req.body;
+    const user: userInstance | null = await userModel.findOne({
+      where: { username: (req.user as userInterface).username },
+    });
+    if (user === null) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+    const passwordResult: boolean = await bcrypt.compare(
+      currentPassword,
+      user.dataValues.password
+    );
+    if (!passwordResult) {
+      return res.status(401).json({
+        success: false,
+        type: "password",
+        message: "Current password is wrong",
+      });
+    }
+
+    await teamMembers.destroy({
+      where: { user_id: (req.user as userInterface).id },
+    });
+
+    const deleteUser: number = await userModel.destroy({
+      where: { username: (req.user as userInterface).username },
+    });
+    if (!deleteUser) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Account is deleted successfully",
     });
   } catch (error) {
     return res.status(500).json({

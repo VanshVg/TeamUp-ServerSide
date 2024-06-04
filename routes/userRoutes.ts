@@ -3,8 +3,11 @@ import express, { Router } from "express";
 import * as userController from "../controllers/userController";
 import {
   changePasswordValidator,
+  deleteAccountValidator,
   loginValidator,
   registerValidator,
+  resetPasswordValidator,
+  updateProfileValidator,
   verifyAccountValidator,
 } from "../validators/userValidator";
 import passport from "passport";
@@ -38,11 +41,27 @@ userRouter.get(
 );
 userRouter.put(
   "/updateProfile",
+  updateProfileValidator,
   passport.authenticate("jwt", {
     session: false,
     failureRedirect: "/",
   }),
   userController.updateProfile
+);
+userRouter.put(
+  "/resetPassword",
+  resetPasswordValidator,
+  passport.authenticate("jwt", {
+    session: false,
+    failureRedirect: "/",
+  }),
+  userController.resetPassword
+);
+userRouter.post(
+  "/deleteAccount",
+  deleteAccountValidator,
+  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  userController.deleteAccount
 );
 
 export default userRouter;

@@ -46,3 +46,45 @@ export const changePasswordValidator: ValidationChain[] = [
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long...!!"),
 ];
+
+export const updateProfileValidator: ValidationChain[] = [
+  body("firstName")
+    .notEmpty()
+    .withMessage("Firstname can't be empty")
+    .matches(/^[A-Za-z\s]+$/)
+    .withMessage("Firstname must be alphabetic."),
+  body("lastName")
+    .notEmpty()
+    .withMessage("Lastname can't be empty")
+    .matches(/^[A-Za-z\s]+$/)
+    .withMessage("Lastname must be alphabetic."),
+  body("username").notEmpty().withMessage("Username can't be empty."),
+  body("email")
+    .notEmpty()
+    .withMessage("Email can't be empty")
+    .isByteLength({ min: 6 })
+    .withMessage("Please provide a valid email address")
+    .isEmail()
+    .withMessage("Invalid email...!!"),
+];
+
+export const resetPasswordValidator: ValidationChain[] = [
+  body("currentPassword")
+    .notEmpty()
+    .withMessage("Current Password can't be empty")
+    .isLength({ min: 6 })
+    .withMessage("Current Password must be at least 6 characters long...!!"),
+  body("password")
+    .notEmpty()
+    .withMessage("Password can't be empty")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long...!!"),
+];
+
+export const deleteAccountValidator: ValidationChain[] = [
+  body("currentPassword")
+    .notEmpty()
+    .withMessage("Current Password can't be empty")
+    .isLength({ min: 6 })
+    .withMessage("Current Password must be at least 6 characters long...!!"),
+];
