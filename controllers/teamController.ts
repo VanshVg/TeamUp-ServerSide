@@ -1,14 +1,15 @@
 import { Request, Response } from "express";
 import { Result, ValidationError, validationResult } from "express-validator";
 import randomstring from "randomstring";
+import { Op } from "sequelize";
 
 import teamModel, { teamInstance } from "../database/models/teamModel";
 import teamMembersModel, {
   teamMembersInstance,
   teamMembersInterface,
 } from "../database/models/teamMembersModel";
+import userModel from "../database/models/userModel";
 import { userInterface } from "../interfaces/interfaces";
-import { Op } from "sequelize";
 
 export const createTeam = async (req: Request, res: Response) => {
   try {
@@ -330,6 +331,41 @@ export const resetCode = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Team code updated successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const getMembers = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const members: teamMembersInstance[] = await teamMembersModel.findAll({
+      where: { team_id: id },
+      include: [
+        {
+          model: userModel,
+        },
+      ],
+    });
+
+    let teamMembers: teamMembersInterface[] = [];
+    let member: number = 0;
+
+    members.forEach((element) => {
+      teamMembers.push(element.dataValues);
+      if (element.dataValues.role === "member") {
+        member++;
+      }
+    });
+    return res.status(200).json({
+      success: true,
+      teamMembers: teamMembers,
+      members: member,
     });
   } catch (error) {
     return res.status(500).json({

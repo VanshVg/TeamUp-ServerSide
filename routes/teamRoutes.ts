@@ -66,5 +66,10 @@ teamRouter.put(
   passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
   teamController.resetCode
 );
+teamRouter.get(
+  "/members/:id",
+  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  teamController.getMembers
+);
 
 export default teamRouter;
