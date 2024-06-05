@@ -46,7 +46,6 @@ export const applyPassportStrategy = () => {
       )
     );
   } catch (error) {
-    console.log(error);
     return null;
   }
 };

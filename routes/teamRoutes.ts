@@ -14,7 +14,7 @@ teamRouter.post(
   createTeamValidator,
   passport.authenticate("jwt", {
     session: false,
-    failureRedirect: "/",
+    failureRedirect: "/login",
   }),
   teamController.createTeam
 );
@@ -23,7 +23,7 @@ teamRouter.post(
   joinTeamValidator,
   passport.authenticate("jwt", {
     session: false,
-    failureRedirect: "/",
+    failureRedirect: "/login",
   }),
   teamController.joinTeam
 );
@@ -31,7 +31,7 @@ teamRouter.get(
   "/userTeams",
   passport.authenticate("jwt", {
     session: false,
-    failureRedirect: "/",
+    failureRedirect: "/login",
   }),
   teamController.userTeams
 );
@@ -39,7 +39,7 @@ teamRouter.get(
   "/archivedTeams",
   passport.authenticate("jwt", {
     session: false,
-    failureRedirect: "/",
+    failureRedirect: "/login",
   }),
   teamController.archivedTeams
 );
@@ -47,7 +47,7 @@ teamRouter.get(
   "/get/:id",
   passport.authenticate("jwt", {
     session: false,
-    failureRedirect: "/",
+    failureRedirect: "/login",
   }),
   teamController.getTeam
 );

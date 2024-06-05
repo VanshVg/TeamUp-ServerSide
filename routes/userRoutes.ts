@@ -23,7 +23,7 @@ userRouter.put(
   verifyAccountValidator,
   passport.authenticate("jwt", {
     session: false,
-    failureRedirect: "/",
+    failureRedirect: "/login",
   }),
   userController.activate
 );
@@ -44,7 +44,7 @@ userRouter.put(
   updateProfileValidator,
   passport.authenticate("jwt", {
     session: false,
-    failureRedirect: "/",
+    failureRedirect: "/login",
   }),
   userController.updateProfile
 );
@@ -53,7 +53,7 @@ userRouter.put(
   resetPasswordValidator,
   passport.authenticate("jwt", {
     session: false,
-    failureRedirect: "/",
+    failureRedirect: "/login",
   }),
   userController.resetPassword
 );

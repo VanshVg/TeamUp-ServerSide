@@ -213,9 +213,18 @@ export const archivedTeams = async (req: Request, res: Response) => {
 export const getTeam = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const team: teamInstance = (await teamModel.findOne({
+    const team = await teamModel.findOne({
       where: { id: id },
-    })) as teamInstance;
+      include: {
+        model: teamMembersModel,
+        where: {
+          [Op.and]: [
+            { team_id: id },
+            { user_id: (req.user as userInterface).id },
+          ],
+        },
+      },
+    });
     if (team === null) {
       return res.status(404).json({
         success: false,
@@ -239,9 +248,23 @@ export const getTeam = async (req: Request, res: Response) => {
 export const updateArchive = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const getTeam = await teamMembersModel.findOne({ where: { team_id: id } });
-    let is_archived = getTeam?.dataValues.is_archived;
-    const updateTeam = await teamMembersModel.update(
+    const getTeam = await teamMembersModel.findOne({
+      where: {
+        [Op.and]: [
+          { user_id: (req.user as userInterface).id },
+          { team_id: id },
+        ],
+      },
+    });
+    if (getTeam === null) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Data not found",
+      });
+    }
+    const is_archived = getTeam.dataValues.is_archived;
+    const updateTeam: [affectedRows: number] = await teamMembersModel.update(
       { is_archived: !is_archived },
       {
         where: {

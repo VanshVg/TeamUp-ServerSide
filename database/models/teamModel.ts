@@ -2,6 +2,7 @@ import { Model, Optional } from "sequelize";
 
 import sequelize from "../connection";
 import { DataType } from "sequelize-typescript";
+import teamMembers from "./teamMembersModel";
 
 export interface teamInterface {
   id: number;

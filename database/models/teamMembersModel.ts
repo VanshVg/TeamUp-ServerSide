@@ -67,4 +67,6 @@ teamMembers.belongsTo(teams, {
   foreignKey: "team_id",
 });
 
+teams.hasMany(teamMembers, { foreignKey: "team_id" });
+
 export default teamMembers;
