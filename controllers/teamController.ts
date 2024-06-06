@@ -383,6 +383,13 @@ export const getMembers = async (req: Request, res: Response) => {
         member++;
       }
     });
+    if (teamMembers.length === 0) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
     return res.status(200).json({
       success: true,
       teamMembers: teamMembers,
