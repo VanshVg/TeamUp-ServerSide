@@ -65,7 +65,6 @@ export const createTeam = async (req: Request, res: Response) => {
       message: "Team is created successfully",
     });
   } catch (error) {
-    console.log(`Error inside createTeam controller`, error);
     return res.status(500).json({
       success: false,
       type: "server",
@@ -142,7 +141,6 @@ export const joinTeam = async (req: Request, res: Response) => {
       message: "User has joined successfully",
     });
   } catch (error) {
-    console.log(`Error inside createTeam controller`, error);
     return res.status(500).json({
       success: false,
       type: "server",
@@ -421,7 +419,103 @@ export const updateTeam = async (req: Request, res: Response) => {
       message: "Team updated successfully",
     });
   } catch (error) {
-    console.log(error);
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const leaveTeam = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const userTeam: teamMembersInstance | null = await teamMembersModel.findOne(
+      {
+        where: {
+          [Op.and]: [
+            { team_id: id },
+            { user_id: (req.user as userInterface).id },
+          ],
+        },
+      }
+    );
+    if (userTeam === null) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+    const deleteUserTeam: number = await teamMembersModel.destroy({
+      where: {
+        [Op.and]: [
+          { team_id: id },
+          { user_id: (req.user as userInterface).id },
+        ],
+      },
+    });
+    if (!deleteUserTeam) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    const getMembers: teamMembersInstance[] | null =
+      await teamMembersModel.findAll({
+        where: { team_id: id },
+        order: ["created_at"],
+      });
+    if (getMembers.length == 0) {
+      const deleteTeam: number = await teamModel.destroy({ where: { id: id } });
+      if (!deleteTeam) {
+        return res.status(500).json({
+          success: false,
+          type: "server",
+          message: "Something went wrong!",
+        });
+      }
+    }
+    if (userTeam.dataValues.role === "admin") {
+      const { user_id } = getMembers[0];
+
+      const getAdmin: teamMembersInstance | null =
+        await teamMembersModel.findOne({
+          where: { [Op.and]: [{ team_id: id }, { role: "admin" }] },
+        });
+      if (getAdmin === null) {
+        const makeAdmin: [affectedRows: number] = await teamMembersModel.update(
+          { role: "admin" },
+          { where: { [Op.and]: [{ team_id: id }, { user_id: user_id }] } }
+        );
+        if (!makeAdmin) {
+          return res.status(500).json({
+            success: false,
+            type: "server",
+            message: "Something went wrong!",
+          });
+        }
+      }
+    }
+    const updateTeam = await teamModel.decrement(["members"], {
+      by: 1,
+      where: { id: id },
+    });
+    if (!updateTeam) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Team leaving successful",
+    });
+  } catch (error) {
     return res.status(500).json({
       success: false,
       type: "server",

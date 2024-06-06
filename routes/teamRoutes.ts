@@ -76,5 +76,10 @@ teamRouter.put(
   passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
   teamController.updateTeam
 );
+teamRouter.delete(
+  "/leave/:id",
+  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  teamController.leaveTeam
+);
 
 export default teamRouter;
