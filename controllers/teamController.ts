@@ -398,3 +398,34 @@ export const getMembers = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const updateTeam = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, description } = req.body;
+
+    const team: [affectedRows: number] = await teamModel.update(
+      { name: name, description: description },
+      { where: { id: id } }
+    );
+    if (!team) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Team updated successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
