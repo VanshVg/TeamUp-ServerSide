@@ -39,6 +39,11 @@ userRouter.get(
   passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
   userController.getProfile
 );
+userRouter.get(
+  "/userProfile/:id",
+  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  userController.getProfile
+);
 userRouter.put(
   "/updateProfile",
   updateProfileValidator,

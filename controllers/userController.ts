@@ -391,8 +391,10 @@ export const changePassword = async (req: Request, res: Response) => {
 
 export const getProfile = async (req: Request, res: Response) => {
   try {
+    const userId: number =
+      Number(req.params.id) || (req.user as userInterface).id;
     const user: userInstance | null = await userModel.findOne({
-      where: { id: (req.user as userInterface).id },
+      where: { id: userId },
     });
     if (!user?.dataValues.id) {
       return res.status(500).json({
