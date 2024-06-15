@@ -530,3 +530,60 @@ export const leaveTeam = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const makeAdmin = async (req: Request, res: Response) => {
+  try {
+    const { userId, teamId } = req.params;
+
+    const changeRole = await teamMembersModel.update(
+      { role: "admin" },
+      { where: { [Op.and]: [{ user_id: userId }, { team_id: teamId }] } }
+    );
+    if (!changeRole) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User has been made admin successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};
+
+export const removeMember = async (req: Request, res: Response) => {
+  try {
+    const { userId, teamId } = req.params;
+
+    const deleteTeamMember = await teamMembersModel.destroy({
+      where: { [Op.and]: [{ user_id: userId }, { team_id: teamId }] },
+    });
+    if (!deleteTeamMember) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User removed successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      type: "server",
+      message: "Something went wrong!",
+    });
+  }
+};

@@ -81,5 +81,15 @@ teamRouter.delete(
   passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
   teamController.leaveTeam
 );
+teamRouter.put(
+  "/makeAdmin/:id",
+  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  teamController.makeAdmin
+);
+teamRouter.delete(
+  "/removeMember/:id",
+  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  teamController.removeMember
+);
 
 export default teamRouter;
