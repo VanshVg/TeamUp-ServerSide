@@ -596,6 +596,18 @@ export const removeMember = async (req: Request, res: Response) => {
       });
     }
 
+    const updateTeam = await teamModel.decrement(["members"], {
+      by: 1,
+      where: { id: teamId },
+    });
+    if (!updateTeam) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "User removed successfully",
