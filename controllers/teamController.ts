@@ -63,6 +63,7 @@ export const createTeam = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Team is created successfully",
+      teamId: team.dataValues.id,
     });
   } catch (error) {
     return res.status(500).json({
@@ -139,6 +140,7 @@ export const joinTeam = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "User has joined successfully",
+      teamId: team.dataValues.id,
     });
   } catch (error) {
     return res.status(500).json({
@@ -367,6 +369,7 @@ export const getMembers = async (req: Request, res: Response) => {
     const { id } = req.params;
     const members: teamMembersInstance[] = await teamMembersModel.findAll({
       where: { team_id: id },
+      order: ["created_at"],
       include: [
         {
           model: userModel,
@@ -531,12 +534,30 @@ export const leaveTeam = async (req: Request, res: Response) => {
   }
 };
 
-export const makeAdmin = async (req: Request, res: Response) => {
+export const changeRole = async (req: Request, res: Response) => {
   try {
     const { userId, teamId } = req.params;
 
+    const teamMember = await teamMembersModel.findOne({
+      where: { [Op.and]: [{ user_id: userId }, { team_id: teamId }] },
+    });
+
+    if (!teamMember) {
+      return res.status(500).json({
+        success: false,
+        type: "server",
+        message: "Something went wrong!",
+      });
+    }
+
+    let newRole: "member" | "admin" = "admin";
+
+    if (teamMember.role === "admin") {
+      newRole = "member";
+    }
+
     const changeRole = await teamMembersModel.update(
-      { role: "admin" },
+      { role: newRole },
       { where: { [Op.and]: [{ user_id: userId }, { team_id: teamId }] } }
     );
     if (!changeRole) {

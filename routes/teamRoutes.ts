@@ -82,12 +82,17 @@ teamRouter.delete(
   teamController.leaveTeam
 );
 teamRouter.put(
-  "/makeAdmin/:id",
+  "/makeAdmin/:teamId/:userId",
   passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
-  teamController.makeAdmin
+  teamController.changeRole
+);
+teamRouter.put(
+  "/removeAdmin/:teamId/:userId",
+  passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
+  teamController.changeRole
 );
 teamRouter.delete(
-  "/removeMember/:id",
+  "/removeMember/:teamId/:userId",
   passport.authenticate("jwt", { session: false, failureRedirect: "/" }),
   teamController.removeMember
 );
