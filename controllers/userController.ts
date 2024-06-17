@@ -196,6 +196,7 @@ export const login = async (req: Request, res: Response) => {
       .json({
         success: true,
         token: token,
+        userData: isUsername.dataValues,
         message: "Login successful",
       });
   } catch (error) {
@@ -250,6 +251,7 @@ export const activate = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "User activated successfully",
+      userData: dataValues,
     });
   } catch (error) {
     return res.status(500).json({

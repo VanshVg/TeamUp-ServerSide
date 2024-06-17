@@ -1,11 +1,12 @@
-import express, { Express, NextFunction, Request, Response } from "express";
+import express, { Express } from "express";
 import { config } from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import passport from "passport";
+import { Server } from "socket.io";
 
 import "./database/connection";
 import routes from "./routes/routes";
-import passport from "passport";
 
 config();
 
@@ -23,6 +24,22 @@ app.use("/", routes);
 
 const PORT: string | 4000 = process.env.PORT || 4000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is listening on ${PORT}`);
+});
+
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL,
+  },
+});
+
+io.on("connection", (socket) => {
+  socket.on("newUser", (username: string) => {
+    console.log("Outside", username);
+    if (username) {
+      console.log("Inside", username);
+      socket.broadcast.emit("join", username);
+    }
+  });
 });
